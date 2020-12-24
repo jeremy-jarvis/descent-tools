@@ -2,12 +2,10 @@ import io
 
 with open("cube.rdl", "rb") as level_file:
     dataBytes = level_file.read()
-    
-# data = bytearray(dataBytes)
-# print(type(data))
-# print(data)
 
 data = io.BytesIO(dataBytes)
+
+# Parse the header
 
 signature = data.read(4)
 print("Signature: " + str(signature, "utf8"))
@@ -27,3 +25,13 @@ print("Objects offset: " + str(objectsOffset))
 fileSizeBytes = data.read(4)
 fileSize = int.from_bytes(fileSizeBytes, "little")
 print("File size: " + str(fileSize))
+
+# Parse the Mine Structures
+
+vertexCountBytes = data.read(2)
+vertexCount = int.from_bytes(vertexCountBytes, "big")
+print("Vertex count: " + str(vertexCount))
+
+cubeCountBytes = data.read(2)
+cubeCount = int.from_bytes(cubeCountBytes, "big")
+print("Cube count: " + str(cubeCount))
