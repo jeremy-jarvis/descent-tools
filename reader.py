@@ -77,6 +77,7 @@ print("Cube count: " + str(cubeCount))
 
 verticesBytes = data.read(vertexCount * 12) # 12 byes per vertex
 vertices = io.BytesIO(verticesBytes)
+vertexCoords = []
 
 for index in list(range(vertexCount)):
     print("=========== VERTEX =============")
@@ -116,3 +117,8 @@ for index in list(range(vertexCount)):
     print("\n")
     print("======== Coordinate: " + str(float(x)) + ", " + str(float(y)) + ", " + str(float(z)))
     print("\n")
+
+    vertexCoords.append([x, y, z])
+
+for vertex in vertexCoords:
+    print(str(float(vertex[0])) + "  " + str(float(vertex[1])) + "  " + str(float(vertex[2])))
