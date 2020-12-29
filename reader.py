@@ -5,34 +5,33 @@ from bitstring import BitArray
 from fixedpoint import FixedPoint
 
 def convert_coord_bytes_to_decimal(coordBytes):
-    # print("coordBytes: " + str(binascii.hexlify(coordBytes)))
+    # Print Info about bytes
     print("coordBytes: " + str(coordBytes))
-    bits = BitArray(hex=coordBytes.hex())
-    print("The Bits: " + bits.bin)
-    print(len(bits.bin))
-    # coordBytesBinary = bin(coordBytes)
-    # print("coordBytes binary: " + coordBytesBinary)
-    # bytesString = "0b" + coordBytes.hex()
-    hexString = "0x" + coordBytes.hex()
-    print("hexString: " + hexString)
-    bitString = "0b" + bits.bin
+    
+    coordBytesHex = "0x" + coordBytes.hex()
+    print("coordBytesHex: " + coordBytesHex)
+    
+    coordBits = BitArray(hex=coordBytes.hex())
+    print("coordBits: " + coordBits.bin)
+    print("Length of coordBits: " + str(len(coordBits.bin)))
+    
+    bitString = "0b" + coordBits.bin
     print("bitString: " + bitString)
+    
+    # Create fixed point number
     coordFP = FixedPoint(bitString, signed=1, m=16, n=16, str_base=2)
+    print("coordFP: " + str(coordFP))
+    
+    # Print out with decimal in correct location
     a = coordFP
     print(f"{a:#0{a.m+2}bm}.{a:0{a.n}bn}")
-    print("coordFP Fixed Point: " + str(float(coordFP)))
-    print(coordFP.qformat)
-    print(str(coordFP))
-    # print("coordBytes array length: " + str(len(coordBytes)))
-    # print("First two bytes: " + str(coordBytes[2:4]))
-    # print("Second two bytes: " + str(coordBytes[0:2]))
-    # intPortion = int.from_bytes(coordBytes[2:4], "big", signed=True)
-    # print("int Portion: " + str(intPortion))
-    # # fractionPortion = int.from_bytes(coordBytes[0:2], "big")
-    # # print("fraction Portion: " + str(fractionPortion))
-    # coordinate = intPortion # + fractionPortion
-    # return coordinate
+    print("coordFP fixed-point float: " + str(float(coordFP)))
+    
+    # Print info about fixed-point number
+    print("Q-Format: " + coordFP.qformat)
+    
     return coordFP
+
 
 with open("cube.rdl", "rb") as level_file:
     dataBytes = level_file.read()
@@ -113,20 +112,3 @@ for index in list(range(vertexCount)):
     print("\n")
     print("======== Coordinate: " + str(float(x)) + ", " + str(float(y)) + ", " + str(float(z)))
     print("\n")
-
-
-# print("xBytes: " + str(xBytes))
-# print("xBytes array length: " + str(len(xBytes)))
-# print("First two bytes: " + str(xBytes[0:2]))
-# intPortion = int.from_bytes(xBytes[2:4], "big")
-# print("int Portion: " + str(intPortion))
-# fractionPortion = int.from_bytes(xBytes[0:2], "big")
-# print("fraction Portion: " + str(fractionPortion))
-# xPos = intPortion + fractionPortion
-    
-# x = int.from_bytes(xBytes, "big")
-# y = int.from_bytes(yBytes, "big")
-# z = int.from_bytes(zBytes, "big")
-# print("x: " + str(x) + '\n')
-# print("y: " + str(y) + '\n')
-# print("z: " + str(z) + '\n')
