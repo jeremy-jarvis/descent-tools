@@ -7,15 +7,17 @@ from fixedpoint import FixedPoint
 def convert_coord_bytes_to_decimal(coordBytes):
     # Print Info about bytes
     print("coordBytes: " + str(coordBytes))
+    coordBytes.reverse() # Reverses byte order, to account for little endianess
+    print("coordBytes after reverse: " + str(coordBytes))
     
     coordBytesHex = "0x" + coordBytes.hex()
     print("coordBytesHex: " + coordBytesHex)
     
-    coordBits = BitArray(hex=coordBytes.hex())
-    print("coordBits: " + coordBits.bin)
-    print("Length of coordBits: " + str(len(coordBits.bin)))
-    
-    bitString = "0b" + coordBits.bin
+    coordBitArray = BitArray(hex=coordBytes.hex())
+    print("coordBitArray: " + coordBitArray.bin)
+    print("Length of coordBitArray: " + str(len(coordBitArray.bin)))
+
+    bitString = "0b" + coordBitArray.bin
     print("bitString: " + bitString)
     
     # Create fixed point number
@@ -61,17 +63,19 @@ print("File size: " + str(fileSize))
 
 # Parse the Mine Structures
 
+spacer = data.read(1)
+
 vertexCountBytes = data.read(2)
-vertexCount = int.from_bytes(vertexCountBytes, "big")
+# print("Vertex count bytes: " + str(vertexCountBytes.hex()))
+vertexCount = int.from_bytes(vertexCountBytes, "little")
 print("Vertex count: " + str(vertexCount))
 
 cubeCountBytes = data.read(2)
-cubeCount = int.from_bytes(cubeCountBytes, "big")
+# print("Cube count bytes: " + str(cubeCountBytes.hex()))
+cubeCount = int.from_bytes(cubeCountBytes, "little")
 print("Cube count: " + str(cubeCount))
 
 verticesBytes = data.read(vertexCount * 12) # 12 byes per vertex
-print("verticesBytes: " + str(verticesBytes))
-# print("=================" + bin(int.from_bytes(verticesBytes, "big")))
 vertices = io.BytesIO(verticesBytes)
 
 for index in list(range(vertexCount)):
@@ -95,9 +99,9 @@ for index in list(range(vertexCount)):
     print("Original Z Bits: " + zBits.bin)
     print("Original Z Bits in Byte form: " + str(zBits.bytes))
 
-    xBytes = vertex[2:4] + vertex[0:2]
-    yBytes = vertex[6:8] + vertex[4:6]
-    zBytes = vertex[10:12] + vertex[8:10]
+    xBytes = vertex[0:4]
+    yBytes = vertex[4:8]
+    zBytes = vertex[8:12]
 
     print("\n")
     print("=========== Calculating X ============")
