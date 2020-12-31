@@ -4,6 +4,8 @@ import binascii
 from bitstring import BitArray
 from fixedpoint import FixedPoint
 
+from cube import CubeSideInfo, Cube
+
 def convert_coord_bytes_to_decimal(coordBytes):
     # Print Info about bytes
     print("coordBytes: " + str(coordBytes))
@@ -35,7 +37,7 @@ def convert_coord_bytes_to_decimal(coordBytes):
     return coordFP
 
 
-with open("cube.rdl", "rb") as level_file:
+with open("hall.rdl", "rb") as level_file:
     dataBytes = level_file.read()
 
 data = io.BytesIO(dataBytes)
@@ -64,6 +66,8 @@ print("File size: " + str(fileSize))
 # Parse the Mine Structures
 
 spacer = data.read(1)
+
+# Parse Vertices
 
 vertexCountBytes = data.read(2)
 # print("Vertex count bytes: " + str(vertexCountBytes.hex()))
@@ -122,3 +126,48 @@ for index in list(range(vertexCount)):
 
 for vertex in vertexCoords:
     print(str(float(vertex[0])) + "  " + str(float(vertex[1])) + "  " + str(float(vertex[2])))
+
+print("\nVertices Parsed: " + str(len(vertexCoords)))
+
+# Parse cubes
+numberOfSidesOnACube = 6
+bytesPerCubeId = 2
+cubeId = 0 # Does this start at zero or one?
+#for cubeIndex in cubeCount:
+# Get CubeNeighborBitmask
+cubeNeighorBitmask = data.read(1)
+cubeNeighborBitmaskArray = BitArray(hex=cubeNeighorBitmask.hex())
+print("cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
+
+# Count number of attached cubes
+numberOfAttachedCubes = 0
+for index in list(range(numberOfSidesOnACube)):
+    if(cubeNeighborBitmaskArray[index] == 1):
+        numberOfAttachedCubes+=1
+
+# Get neighbor cube Ids
+numBytesForNeighborCubeIds = numberOfAttachedCubes * bytesPerCubeId
+neighborCubeIdsBytes = data.read(numBytesForNeighborCubeIds)
+neighborCubeIds = io.BytesIO(neighborCubeIdsBytes)
+
+# Gather side and cube Id for each neighbor cube
+neighborCubes = []
+for index in list(range(numberOfSidesOnACube)):
+    bit = cubeNeighborBitmaskArray[index]
+    if(bit == 1):
+        attachedCubeIdBytes = neighborCubeIds.read(2)
+        attachedCubeId = int.from_bytes(attachedCubeIdBytes, "little")
+        neighborCubes.append(CubeSideInfo(attachedCubeId))
+
+isEnergyCenter = cubeNeighborBitmaskArray[6]
+cube = Cube(cubeId, neighborCubes, isEnergyCenter)
+
+#To do: Get the vertices references from the next byte
+
+# Print out the cube info
+print("===Cube Info===")
+print("Cube id: " + str(cube.id))
+print("Is Energy Center: " + str(isEnergyCenter))
+print("Neighbors:")
+for cube in neighborCubes:
+    print("Id: " + str(cube._attachedCubeId))
