@@ -1,9 +1,27 @@
+from enum import Enum
+
+class CubeSide(Enum):
+    LEFT = 0
+    TOP = 1
+    RIGHT = 2
+    BOTTOM = 3
+    BACK = 4
+    FRONT = 5
+
+class EnergyCenterInfo:
+    def __init__(self, special, energyCenterNumber, value):
+        self.special = special
+        self.energyCenterNumber = energyCenterNumber
+        self.value = value
+
 class Cube:
-    def __init__(self, id, neighborCubes, isEnergyCenter):
+    def __init__(self, id, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP):
         self.id = id
         self.neighborCubes = neighborCubes
         self.isEnergyCenter = isEnergyCenter
-
+        self.vertexIndices = vertexIndices
+        self.energyCenterInfo = energyCenterInfo
+        self.staticLightFP = staticLightFP
 
 class CubeSideInfo:
     def __init__(self, attachedCubeId, cubeSide):

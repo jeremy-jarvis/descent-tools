@@ -4,7 +4,7 @@ import binascii
 from bitstring import BitArray
 from fixedpoint import FixedPoint
 
-from cube import CubeSideInfo, Cube
+from cube import CubeSideInfo, Cube, CubeSide, EnergyCenterInfo
 
 def convert_coord_bytes_to_decimal(coordBytes):
     # Print Info about bytes
@@ -37,7 +37,7 @@ def convert_coord_bytes_to_decimal(coordBytes):
     return coordFP
 
 
-with open("hall.rdl", "rb") as level_file:
+with open("cube.rdl", "rb") as level_file:
     dataBytes = level_file.read()
 
 data = io.BytesIO(dataBytes)
@@ -137,7 +137,7 @@ cubeId = 0 # Does this start at zero or one?
 # Get CubeNeighborBitmask
 cubeNeighorBitmask = data.read(1)
 cubeNeighborBitmaskArray = BitArray(hex=cubeNeighorBitmask.hex())
-print("cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
+print("Cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
 
 # Count number of attached cubes
 numberOfAttachedCubes = 0
@@ -157,17 +157,64 @@ for index in list(range(numberOfSidesOnACube)):
     if(bit == 1):
         attachedCubeIdBytes = neighborCubeIds.read(2)
         attachedCubeId = int.from_bytes(attachedCubeIdBytes, "little")
-        neighborCubes.append(CubeSideInfo(attachedCubeId))
+        neighborCubes.append(CubeSideInfo(attachedCubeId, index))
 
 isEnergyCenter = cubeNeighborBitmaskArray[6]
-cube = Cube(cubeId, neighborCubes, isEnergyCenter)
 
-#To do: Get the vertices references from the next byte
+# Get vertex references
+numberOfVertexReferences = 8
+vertexReferenceByteSize = 2
+vertexIndices = []
+print("Number of Vertex Indices: " + str(numberOfVertexReferences))
+for index in list(range(numberOfVertexReferences)):
+    vertexIndexBytes = data.read(vertexReferenceByteSize)
+    vertexIndex = int.from_bytes(vertexIndexBytes, "little")
+    vertexIndices.append(vertexIndex)
+
+energyCenterInfo = None
+
+if(isEnergyCenter):
+    specialbytes = data.read(1)
+    special = int.from_bytes(specialbytes, "little")
+    energyCenterNumberBytes = data.read(1)
+    energyCenterNumber = int.from_bytes(energyCenterNumberBytes, "little")
+    valueBytes = data.read(2)
+    value = int.from_bytes(valueBytes, "little")
+    energyCenterInfo = EnergyCenterInfo(special, energyCenterNumber, value)
+
+# Get static light value. It is a fixed-point number in Q4.12 format.
+staticLightBytes = data.read(2)
+staticLightBitArray = BitArray(hex=staticLightBytes.hex())
+staticLightBitString = "0b" + staticLightBitArray.bin
+print("static light bitString: " + staticLightBitString)
+staticLightFP = FixedPoint(staticLightBitString, signed=0, m=4, n=12, str_base=2)
+print("static light fixed-point: " + str(staticLightFP))
+a = staticLightFP
+print(f"{a:#0{a.m+2}bm}.{a:0{a.n}bn}")
+print("static light fixed-point float: " + str(float(staticLightFP)))
+
+# Get info about walls - WIP
+wallsBitmask = data.read(1)
+
+cube = Cube(cubeId, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP)
 
 # Print out the cube info
-print("===Cube Info===")
+print("\n")
+print("=========Cube Info=========")
 print("Cube id: " + str(cube.id))
-print("Is Energy Center: " + str(isEnergyCenter))
+print("Is Energy Center: " + str(cube.isEnergyCenter))
 print("Neighbors:")
-for cube in neighborCubes:
-    print("Id: " + str(cube._attachedCubeId))
+for neighborCube in cube.neighborCubes:
+    print("Id: " + str(neighborCube._attachedCubeId) + ", Side: " + str(CubeSide(neighborCube._cubeSide)))
+
+print("Indices:")
+for vertexIndex in cube.vertexIndices:
+    print(vertexIndex)
+
+if(cube.energyCenterInfo is not None):
+    print("Energy Center Info:")
+    print("Special: " + str(cube.energyCenterInfo.special))
+    print("Energy Center Number: " + str(cube.energyCenterInfo.energyCenterNumber))
+    print("Value: " + str(cube.energyCenterInfo.value))
+
+print("Static light value: " + str(float(cube.staticLightFP)))
