@@ -4,7 +4,7 @@ import binascii
 from bitstring import BitArray
 from fixedpoint import FixedPoint
 
-from cube import CubeSideInfo, Cube, CubeSide, EnergyCenterInfo
+from cube import NeighborCubeInfo, Cube, CubeSide, EnergyCenterInfo, WallInfo
 
 def convert_coord_bytes_to_decimal(coordBytes):
     # Print Info about bytes
@@ -37,7 +37,7 @@ def convert_coord_bytes_to_decimal(coordBytes):
     return coordFP
 
 
-with open("cube.rdl", "rb") as level_file:
+with open("shortHall.rdl", "rb") as level_file:
     dataBytes = level_file.read()
 
 data = io.BytesIO(dataBytes)
@@ -157,7 +157,7 @@ for index in list(range(numberOfSidesOnACube)):
     if(bit == 1):
         attachedCubeIdBytes = neighborCubeIds.read(2)
         attachedCubeId = int.from_bytes(attachedCubeIdBytes, "little")
-        neighborCubes.append(CubeSideInfo(attachedCubeId, index))
+        neighborCubes.append(NeighborCubeInfo(attachedCubeId, index))
 
 isEnergyCenter = cubeNeighborBitmaskArray[6]
 
@@ -193,10 +193,19 @@ a = staticLightFP
 print(f"{a:#0{a.m+2}bm}.{a:0{a.n}bn}")
 print("static light fixed-point float: " + str(float(staticLightFP)))
 
-# Get info about walls - WIP
+# Get info about walls
 wallsBitmask = data.read(1)
+wallsBitmaskArray = BitArray(hex=wallsBitmask.hex())
+print("Cube walls bitmask: " + wallsBitmaskArray.bin)
+walls = []
+for index in list(range(numberOfSidesOnACube)):
+    bit = wallsBitmaskArray[index]
+    if(bit == 1):
+        wallIdBytes = data.read(1)
+        wallId = int.from_bytes(wallIdBytes, "little")
+        walls.append(WallInfo(wallId, index))
 
-cube = Cube(cubeId, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP)
+cube = Cube(cubeId, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP, walls)
 
 # Print out the cube info
 print("\n")
@@ -218,3 +227,7 @@ if(cube.energyCenterInfo is not None):
     print("Value: " + str(cube.energyCenterInfo.value))
 
 print("Static light value: " + str(float(cube.staticLightFP)))
+
+print("Walls:")
+for wall in cube.wallInfoList:
+    print("Id: " + str(wall.wallId) + ", Side: " + str(CubeSide(wall.cubeSide)))
