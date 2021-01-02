@@ -37,7 +37,7 @@ def convert_coord_bytes_to_decimal(coordBytes):
     return coordFP
 
 
-with open("shortHall.rdl", "rb") as level_file:
+with open("cube.rdl", "rb") as level_file:
     dataBytes = level_file.read()
 
 data = io.BytesIO(dataBytes)
@@ -205,6 +205,27 @@ for index in list(range(numberOfSidesOnACube)):
         wallId = int.from_bytes(wallIdBytes, "little")
         walls.append(WallInfo(wallId, index))
 
+# To do: Parse texture info
+# Determine which cube sides don't have a neighbor cube (or is a wall)
+for index in list(range(numberOfSidesOnACube)):
+    bit = cubeNeighborBitmaskArray[index]
+    if(bit == 0):
+        primaryTextureBytes = data.read(2)
+        primaryTextureByteArray = bytearray(primaryTextureBytes)
+        primaryTextureByteArray.reverse()
+        primaryTextureBits = BitArray(hex=primaryTextureByteArray.hex())
+        print("primaryTextureBits: " + str(primaryTextureBits.bin))
+        if(primaryTextureBits[0] == 1):
+            secondaryTextureExists = True
+        else:
+            secondaryTextureExists = False
+        primaryTextureBits = primaryTextureBits[1:16]
+        primaryTextureId = primaryTextureBits.int
+        print("Primary Texture ID: " + str(primaryTextureId))
+        
+
+
+# Instantiate the cube
 cube = Cube(cubeId, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP, walls)
 
 # Print out the cube info
