@@ -147,9 +147,9 @@ cubeId = 0 # Does this start at zero or one?
 for cubeIndex in list(range(cubeCount)):
     # Get CubeNeighborBitmask
     cubeNeighborBitmaskBytes = data.read(1)
-    cubeNeighborBitmaskByteArray = bytearray(cubeNeighborBitmaskBytes)
-    cubeNeighborBitmaskByteArray.reverse()
-    cubeNeighborBitmaskArray = BitArray(hex=cubeNeighborBitmaskByteArray.hex())
+    # cubeNeighborBitmaskByteArray = bytearray(cubeNeighborBitmaskBytes)
+    # cubeNeighborBitmaskByteArray.reverse()
+    cubeNeighborBitmaskArray = BitArray(hex=cubeNeighborBitmaskBytes.hex())
     print("Cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
 
     # Count number of attached cubes
@@ -157,6 +157,8 @@ for cubeIndex in list(range(cubeCount)):
     for index in list(range(numberOfSidesOnACube)):
         if(cubeNeighborBitmaskArray[index] == 1):
             numberOfAttachedCubes+=1
+
+    print("Number of neighbor cubes: " + str(numberOfAttachedCubes))
 
     # Get neighbor cube Ids
     numBytesForNeighborCubeIds = numberOfAttachedCubes * bytesPerCubeId
@@ -166,14 +168,12 @@ for cubeIndex in list(range(cubeCount)):
     # Gather side and cube Id for each neighbor cube
     neighborCubes = []
     for index in list(range(numberOfSidesOnACube)):
+        print("========== index: " + str(index) + " ==================")
         bit = cubeNeighborBitmaskArray[index]
         if(bit == 1):
             attachedCubeIdBytes = neighborCubeIds.read(2)
             attachedCubeId = int.from_bytes(attachedCubeIdBytes, "little")
             neighborCubes.append(NeighborCubeInfo(attachedCubeId, index))
-
-    isEnergyCenter = cubeNeighborBitmaskArray[6]
-    print("isEnergyCenter: " + str(isEnergyCenter))
 
     # Get vertex references
     numberOfVertexReferences = 8
@@ -184,6 +184,9 @@ for cubeIndex in list(range(cubeCount)):
         vertexIndexBytes = data.read(vertexReferenceByteSize)
         vertexIndex = int.from_bytes(vertexIndexBytes, "little")
         vertexIndices.append(vertexIndex)
+
+    isEnergyCenter = cubeNeighborBitmaskArray[6] == 1
+    print("isEnergyCenter: " + str(isEnergyCenter))
 
     energyCenterInfo = None
 
@@ -212,22 +215,31 @@ for cubeIndex in list(range(cubeCount)):
     # Get info about walls
     walls = []
     wallsBitmaskBytes = data.read(1)
-    # TODO: Figure out why parsing walls causes problems. Ignore walls for now.
-    # wallsBitmaskArray = BitArray(hex=wallsBitmaskBytes.hex())
-    # print("==== Cube walls bitmask: " + wallsBitmaskArray.bin)
-    # for index in list(range(numberOfSidesOnACube)):
-    #     bit = wallsBitmaskArray[index]
-    #     if(bit == 1):
-    #         wallIdBytes = data.read(1)
-    #         wallId = int.from_bytes(wallIdBytes, "little")
-    #         walls.append(WallInfo(wallId, index))
+    wallsBitmaskByteArray = bytearray(wallsBitmaskBytes)
+    print("==== wallsBitmaskByteArray hex: 0x" + str(wallsBitmaskByteArray.hex()))
+    # TODO: Something might be wrong with the wall parsing. Ignore walls in order to parse levels without walls.
+    wallsBitmaskArray = BitArray(hex=wallsBitmaskBytes.hex())
+    print("==== Cube walls bitmask: " + wallsBitmaskArray.bin)
+    for index in list(range(numberOfSidesOnACube)):
+        bit = wallsBitmaskArray[index]
+        if(bit == 1):
+            wallIdBytes = data.read(1)
+            wallId = int.from_bytes(wallIdBytes, "little")
+            walls.append(WallInfo(wallId, index))
 
     # Parse texture info
     cubeTextures = []
+    print("######################## Parsing cube textures ########################")
+    print("neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
+    print("wall bitmask: " + wallsBitmaskArray.bin)
+    print("#######################################################################")
     for index in list(range(numberOfSidesOnACube)):
-        bit = cubeNeighborBitmaskArray[index]
-        sideHasTexture = bit == 0
+        # This texture parsing code seems to be correct.
+        isDisconnectedSide = cubeNeighborBitmaskArray[index] == 0
+        isWallSide = wallsBitmaskArray[index] == 1
+        sideHasTexture = isDisconnectedSide or isWallSide
         if(sideHasTexture):
+            print("~~~~~~~~~~~ Found textured side: " + str(index) + " ~~~~~~~~~~~~~~`")
             # Get primary texture id
             primaryTextureBytes = data.read(2)
             primaryTextureByteArray = bytearray(primaryTextureBytes)
@@ -259,6 +271,7 @@ for cubeIndex in list(range(cubeCount)):
     print("\n")
 
     # Store the cube data
+    cubeId = cubeIndex
     cube = Cube(cubeId, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP, walls, cubeTextures)
     cubes.append(cube)
 
