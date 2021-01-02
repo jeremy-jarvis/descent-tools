@@ -1,5 +1,5 @@
 import io
-from decimal import *
+import sys
 import binascii
 from bitstring import BitArray
 from fixedpoint import FixedPoint
@@ -37,7 +37,16 @@ def convert_coord_bytes_to_decimal(coordBytes):
     return coordFP
 
 
-with open("hall.rdl", "rb") as level_file:
+############ Beginning of script ###############
+
+numberOfArguments = len(sys.argv)
+if(numberOfArguments != 2):
+    print("Error: No level file name (*.rdl) provided.")
+    sys.exit()
+
+levelFileName = str(sys.argv[1])
+
+with open(levelFileName, "rb") as level_file:
     dataBytes = level_file.read()
 
 data = io.BytesIO(dataBytes)
@@ -249,7 +258,6 @@ for cubeIndex in list(range(cubeCount)):
     
     print("\n")
 
-
     # Store the cube data
     cube = Cube(cubeId, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP, walls, cubeTextures)
     cubes.append(cube)
@@ -286,3 +294,19 @@ for cube in cubes:
         print("=== Textures for side: " + str(texture.cubeSide) + " ===")
         print("Primary Texture: " + str(texture.primaryTextureId))
         print("Secondary Texture: " + str(texture.secondaryTextureId))
+
+# Print file header info again (so that it is at the bottom of output)
+print("\n")
+print("Level Info (from header):")
+print("Signature: " + str(signature, "utf8"))
+print("Version: " + str(version))
+print("Mine data offset: " + str(mineDataOffset))
+print("Objects offset: " + str(objectsOffset))
+print("File size: " + str(fileSize))
+print("Vertex count: " + str(vertexCount))
+print("Cube count: " + str(cubeCount))
+
+print("\n")
+print("Level Data (parsed):")
+print("Vertices: " + str(len(vertexCoords)))
+print("Cubes: " + str(len(cubes)))
