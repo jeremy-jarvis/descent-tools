@@ -37,7 +37,7 @@ def convert_coord_bytes_to_decimal(coordBytes):
     return coordFP
 
 
-with open("cube.rdl", "rb") as level_file:
+with open("shortHall.rdl", "rb") as level_file:
     dataBytes = level_file.read()
 
 data = io.BytesIO(dataBytes)
@@ -135,8 +135,10 @@ bytesPerCubeId = 2
 cubeId = 0 # Does this start at zero or one?
 #for cubeIndex in cubeCount:
 # Get CubeNeighborBitmask
-cubeNeighorBitmask = data.read(1)
-cubeNeighborBitmaskArray = BitArray(hex=cubeNeighorBitmask.hex())
+cubeNeighborBitmaskBytes = data.read(1)
+cubeNeighborBitmaskByteArray = bytearray(cubeNeighborBitmaskBytes)
+cubeNeighborBitmaskByteArray.reverse()
+cubeNeighborBitmaskArray = BitArray(hex=cubeNeighborBitmaskByteArray.hex())
 print("Cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
 
 # Count number of attached cubes
@@ -184,7 +186,9 @@ if(isEnergyCenter):
 
 # Get static light value. It is a fixed-point number in Q4.12 format.
 staticLightBytes = data.read(2)
-staticLightBitArray = BitArray(hex=staticLightBytes.hex())
+staticLightByteArray = bytearray(staticLightBytes)
+staticLightByteArray.reverse()
+staticLightBitArray = BitArray(hex=staticLightByteArray.hex())
 staticLightBitString = "0b" + staticLightBitArray.bin
 print("static light bitString: " + staticLightBitString)
 staticLightFP = FixedPoint(staticLightBitString, signed=0, m=4, n=12, str_base=2)
@@ -194,8 +198,10 @@ print(f"{a:#0{a.m+2}bm}.{a:0{a.n}bn}")
 print("static light fixed-point float: " + str(float(staticLightFP)))
 
 # Get info about walls
-wallsBitmask = data.read(1)
-wallsBitmaskArray = BitArray(hex=wallsBitmask.hex())
+wallsBitmaskBytes = data.read(1)
+wallsBitmaskByteArray = bytearray(wallsBitmaskBytes)
+wallsBitmaskByteArray.reverse()
+wallsBitmaskArray = BitArray(hex=wallsBitmaskByteArray.hex())
 print("Cube walls bitmask: " + wallsBitmaskArray.bin)
 walls = []
 for index in list(range(numberOfSidesOnACube)):
@@ -205,11 +211,12 @@ for index in list(range(numberOfSidesOnACube)):
         wallId = int.from_bytes(wallIdBytes, "little")
         walls.append(WallInfo(wallId, index))
 
-# To do: Parse texture info
-# Determine which cube sides don't have a neighbor cube (or is a wall)
+# Parse texture info
 for index in list(range(numberOfSidesOnACube)):
     bit = cubeNeighborBitmaskArray[index]
-    if(bit == 0):
+    sideHasTexture = bit == 0
+    if(sideHasTexture):
+        # Get primary texture id
         primaryTextureBytes = data.read(2)
         primaryTextureByteArray = bytearray(primaryTextureBytes)
         primaryTextureByteArray.reverse()
@@ -221,8 +228,16 @@ for index in list(range(numberOfSidesOnACube)):
             secondaryTextureExists = False
         primaryTextureBits = primaryTextureBits[1:16]
         primaryTextureId = primaryTextureBits.int
-        print("Primary Texture ID: " + str(primaryTextureId))
         
+        # Get secondary texture id
+        print("Primary Texture ID: " + str(primaryTextureId))
+        secondaryTextureId = None
+        if(secondaryTextureExists):
+            secondaryTextureBytes = data.read(2)
+            secondaryTextureId = int.from_bytes(secondaryTextureBytes, "little")
+        print("Secondary Texture ID " + str(secondaryTextureId))
+
+        # TODO: Get UVL value(s)
 
 
 # Instantiate the cube
