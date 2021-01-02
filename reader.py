@@ -4,7 +4,7 @@ import binascii
 from bitstring import BitArray
 from fixedpoint import FixedPoint
 
-from cube import NeighborCubeInfo, Cube, CubeSide, EnergyCenterInfo, WallInfo
+from cube import NeighborCubeInfo, Cube, CubeSide, EnergyCenterInfo, WallInfo, TextureInfo
 
 def convert_coord_bytes_to_decimal(coordBytes):
     # Print Info about bytes
@@ -37,7 +37,7 @@ def convert_coord_bytes_to_decimal(coordBytes):
     return coordFP
 
 
-with open("shortHall.rdl", "rb") as level_file:
+with open("hall.rdl", "rb") as level_file:
     dataBytes = level_file.read()
 
 data = io.BytesIO(dataBytes)
@@ -82,6 +82,7 @@ print("Cube count: " + str(cubeCount))
 verticesBytes = data.read(vertexCount * 12) # 12 byes per vertex
 vertices = io.BytesIO(verticesBytes)
 vertexCoords = []
+cubes = []
 
 for index in list(range(vertexCount)):
     print("=========== VERTEX =============")
@@ -127,143 +128,161 @@ for index in list(range(vertexCount)):
 for vertex in vertexCoords:
     print(str(float(vertex[0])) + "  " + str(float(vertex[1])) + "  " + str(float(vertex[2])))
 
-print("\nVertices Parsed: " + str(len(vertexCoords)))
+print("\nVertices Parsed: " + str(len(vertexCoords)) + "\n")
 
 # Parse cubes
 numberOfSidesOnACube = 6
 bytesPerCubeId = 2
 cubeId = 0 # Does this start at zero or one?
-#for cubeIndex in cubeCount:
-# Get CubeNeighborBitmask
-cubeNeighborBitmaskBytes = data.read(1)
-cubeNeighborBitmaskByteArray = bytearray(cubeNeighborBitmaskBytes)
-cubeNeighborBitmaskByteArray.reverse()
-cubeNeighborBitmaskArray = BitArray(hex=cubeNeighborBitmaskByteArray.hex())
-print("Cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
 
-# Count number of attached cubes
-numberOfAttachedCubes = 0
-for index in list(range(numberOfSidesOnACube)):
-    if(cubeNeighborBitmaskArray[index] == 1):
-        numberOfAttachedCubes+=1
+for cubeIndex in list(range(cubeCount)):
+    # Get CubeNeighborBitmask
+    cubeNeighborBitmaskBytes = data.read(1)
+    cubeNeighborBitmaskByteArray = bytearray(cubeNeighborBitmaskBytes)
+    cubeNeighborBitmaskByteArray.reverse()
+    cubeNeighborBitmaskArray = BitArray(hex=cubeNeighborBitmaskByteArray.hex())
+    print("Cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
 
-# Get neighbor cube Ids
-numBytesForNeighborCubeIds = numberOfAttachedCubes * bytesPerCubeId
-neighborCubeIdsBytes = data.read(numBytesForNeighborCubeIds)
-neighborCubeIds = io.BytesIO(neighborCubeIdsBytes)
+    # Count number of attached cubes
+    numberOfAttachedCubes = 0
+    for index in list(range(numberOfSidesOnACube)):
+        if(cubeNeighborBitmaskArray[index] == 1):
+            numberOfAttachedCubes+=1
 
-# Gather side and cube Id for each neighbor cube
-neighborCubes = []
-for index in list(range(numberOfSidesOnACube)):
-    bit = cubeNeighborBitmaskArray[index]
-    if(bit == 1):
-        attachedCubeIdBytes = neighborCubeIds.read(2)
-        attachedCubeId = int.from_bytes(attachedCubeIdBytes, "little")
-        neighborCubes.append(NeighborCubeInfo(attachedCubeId, index))
+    # Get neighbor cube Ids
+    numBytesForNeighborCubeIds = numberOfAttachedCubes * bytesPerCubeId
+    neighborCubeIdsBytes = data.read(numBytesForNeighborCubeIds)
+    neighborCubeIds = io.BytesIO(neighborCubeIdsBytes)
 
-isEnergyCenter = cubeNeighborBitmaskArray[6]
+    # Gather side and cube Id for each neighbor cube
+    neighborCubes = []
+    for index in list(range(numberOfSidesOnACube)):
+        bit = cubeNeighborBitmaskArray[index]
+        if(bit == 1):
+            attachedCubeIdBytes = neighborCubeIds.read(2)
+            attachedCubeId = int.from_bytes(attachedCubeIdBytes, "little")
+            neighborCubes.append(NeighborCubeInfo(attachedCubeId, index))
 
-# Get vertex references
-numberOfVertexReferences = 8
-vertexReferenceByteSize = 2
-vertexIndices = []
-print("Number of Vertex Indices: " + str(numberOfVertexReferences))
-for index in list(range(numberOfVertexReferences)):
-    vertexIndexBytes = data.read(vertexReferenceByteSize)
-    vertexIndex = int.from_bytes(vertexIndexBytes, "little")
-    vertexIndices.append(vertexIndex)
+    isEnergyCenter = cubeNeighborBitmaskArray[6]
+    print("isEnergyCenter: " + str(isEnergyCenter))
 
-energyCenterInfo = None
+    # Get vertex references
+    numberOfVertexReferences = 8
+    vertexReferenceByteSize = 2
+    vertexIndices = []
+    print("Number of Vertex Indices: " + str(numberOfVertexReferences))
+    for index in list(range(numberOfVertexReferences)):
+        vertexIndexBytes = data.read(vertexReferenceByteSize)
+        vertexIndex = int.from_bytes(vertexIndexBytes, "little")
+        vertexIndices.append(vertexIndex)
 
-if(isEnergyCenter):
-    specialbytes = data.read(1)
-    special = int.from_bytes(specialbytes, "little")
-    energyCenterNumberBytes = data.read(1)
-    energyCenterNumber = int.from_bytes(energyCenterNumberBytes, "little")
-    valueBytes = data.read(2)
-    value = int.from_bytes(valueBytes, "little")
-    energyCenterInfo = EnergyCenterInfo(special, energyCenterNumber, value)
+    energyCenterInfo = None
 
-# Get static light value. It is a fixed-point number in Q4.12 format.
-staticLightBytes = data.read(2)
-staticLightByteArray = bytearray(staticLightBytes)
-staticLightByteArray.reverse()
-staticLightBitArray = BitArray(hex=staticLightByteArray.hex())
-staticLightBitString = "0b" + staticLightBitArray.bin
-print("static light bitString: " + staticLightBitString)
-staticLightFP = FixedPoint(staticLightBitString, signed=0, m=4, n=12, str_base=2)
-print("static light fixed-point: " + str(staticLightFP))
-a = staticLightFP
-print(f"{a:#0{a.m+2}bm}.{a:0{a.n}bn}")
-print("static light fixed-point float: " + str(float(staticLightFP)))
+    if(isEnergyCenter):
+        specialbytes = data.read(1)
+        special = int.from_bytes(specialbytes, "little")
+        energyCenterNumberBytes = data.read(1)
+        energyCenterNumber = int.from_bytes(energyCenterNumberBytes, "little")
+        valueBytes = data.read(2)
+        value = int.from_bytes(valueBytes, "little")
+        energyCenterInfo = EnergyCenterInfo(special, energyCenterNumber, value)
 
-# Get info about walls
-wallsBitmaskBytes = data.read(1)
-wallsBitmaskByteArray = bytearray(wallsBitmaskBytes)
-wallsBitmaskByteArray.reverse()
-wallsBitmaskArray = BitArray(hex=wallsBitmaskByteArray.hex())
-print("Cube walls bitmask: " + wallsBitmaskArray.bin)
-walls = []
-for index in list(range(numberOfSidesOnACube)):
-    bit = wallsBitmaskArray[index]
-    if(bit == 1):
-        wallIdBytes = data.read(1)
-        wallId = int.from_bytes(wallIdBytes, "little")
-        walls.append(WallInfo(wallId, index))
+    # Get static light value. It is a fixed-point number in Q4.12 format.
+    staticLightBytes = data.read(2)
+    staticLightByteArray = bytearray(staticLightBytes)
+    staticLightByteArray.reverse()
+    staticLightBitArray = BitArray(hex=staticLightByteArray.hex())
+    staticLightBitString = "0b" + staticLightBitArray.bin
+    print("static light bitString: " + staticLightBitString)
+    staticLightFP = FixedPoint(staticLightBitString, signed=0, m=4, n=12, str_base=2)
+    print("static light fixed-point: " + str(staticLightFP))
+    a = staticLightFP
+    print(f"{a:#0{a.m+2}bm}.{a:0{a.n}bn}")
+    print("static light fixed-point float: " + str(float(staticLightFP)))
 
-# Parse texture info
-for index in list(range(numberOfSidesOnACube)):
-    bit = cubeNeighborBitmaskArray[index]
-    sideHasTexture = bit == 0
-    if(sideHasTexture):
-        # Get primary texture id
-        primaryTextureBytes = data.read(2)
-        primaryTextureByteArray = bytearray(primaryTextureBytes)
-        primaryTextureByteArray.reverse()
-        primaryTextureBits = BitArray(hex=primaryTextureByteArray.hex())
-        print("primaryTextureBits: " + str(primaryTextureBits.bin))
-        if(primaryTextureBits[0] == 1):
-            secondaryTextureExists = True
-        else:
-            secondaryTextureExists = False
-        primaryTextureBits = primaryTextureBits[1:16]
-        primaryTextureId = primaryTextureBits.int
-        
-        # Get secondary texture id
-        print("Primary Texture ID: " + str(primaryTextureId))
-        secondaryTextureId = None
-        if(secondaryTextureExists):
-            secondaryTextureBytes = data.read(2)
-            secondaryTextureId = int.from_bytes(secondaryTextureBytes, "little")
-        print("Secondary Texture ID " + str(secondaryTextureId))
+    # Get info about walls
+    walls = []
+    wallsBitmaskBytes = data.read(1)
+    # TODO: Figure out why parsing walls causes problems. Ignore walls for now.
+    # wallsBitmaskArray = BitArray(hex=wallsBitmaskBytes.hex())
+    # print("==== Cube walls bitmask: " + wallsBitmaskArray.bin)
+    # for index in list(range(numberOfSidesOnACube)):
+    #     bit = wallsBitmaskArray[index]
+    #     if(bit == 1):
+    #         wallIdBytes = data.read(1)
+    #         wallId = int.from_bytes(wallIdBytes, "little")
+    #         walls.append(WallInfo(wallId, index))
 
-        # TODO: Get UVL value(s)
+    # Parse texture info
+    cubeTextures = []
+    for index in list(range(numberOfSidesOnACube)):
+        bit = cubeNeighborBitmaskArray[index]
+        sideHasTexture = bit == 0
+        if(sideHasTexture):
+            # Get primary texture id
+            primaryTextureBytes = data.read(2)
+            primaryTextureByteArray = bytearray(primaryTextureBytes)
+            primaryTextureByteArray.reverse()
+            primaryTextureBits = BitArray(hex=primaryTextureByteArray.hex())
+            # print("primaryTextureBits: " + str(primaryTextureBits.bin))
+            if(primaryTextureBits[0] == 1):
+                secondaryTextureExists = True
+            else:
+                secondaryTextureExists = False
+            primaryTextureBits = primaryTextureBits[1:16]
+            primaryTextureId = primaryTextureBits.int
+            
+            # Get secondary texture id
+            print("Primary Texture ID: " + str(primaryTextureId))
+            secondaryTextureId = None
+            if(secondaryTextureExists):
+                secondaryTextureBytes = data.read(2)
+                secondaryTextureId = int.from_bytes(secondaryTextureBytes, "little")
+            print("Secondary Texture ID " + str(secondaryTextureId))
+
+            textureInfo = TextureInfo(primaryTextureId, secondaryTextureId, index)
+            cubeTextures.append(textureInfo)
+
+            # TODO: Get UVL value(s)
+            # For now, just ignore the values
+            data.read(12 * 2)
+    
+    print("\n")
 
 
-# Instantiate the cube
-cube = Cube(cubeId, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP, walls)
+    # Store the cube data
+    cube = Cube(cubeId, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP, walls, cubeTextures)
+    cubes.append(cube)
+
 
 # Print out the cube info
-print("\n")
-print("=========Cube Info=========")
-print("Cube id: " + str(cube.id))
-print("Is Energy Center: " + str(cube.isEnergyCenter))
-print("Neighbors:")
-for neighborCube in cube.neighborCubes:
-    print("Id: " + str(neighborCube._attachedCubeId) + ", Side: " + str(CubeSide(neighborCube._cubeSide)))
+for cube in cubes:
+    print("\n")
+    print("=========Cube Info=========")
+    print("Cube id: " + str(cube.id))
+    print("Is Energy Center: " + str(cube.isEnergyCenter))
+    print("Neighbors:")
+    for neighborCube in cube.neighborCubes:
+        print("Id: " + str(neighborCube._attachedCubeId) + ", Side: " + str(CubeSide(neighborCube._cubeSide)))
 
-print("Indices:")
-for vertexIndex in cube.vertexIndices:
-    print(vertexIndex)
+    print("Vertex Indices:")
+    for vertexIndex in cube.vertexIndices:
+        print(vertexIndex)
 
-if(cube.energyCenterInfo is not None):
-    print("Energy Center Info:")
-    print("Special: " + str(cube.energyCenterInfo.special))
-    print("Energy Center Number: " + str(cube.energyCenterInfo.energyCenterNumber))
-    print("Value: " + str(cube.energyCenterInfo.value))
+    if(cube.energyCenterInfo is not None):
+        print("Energy Center Info:")
+        print("Special: " + str(cube.energyCenterInfo.special))
+        print("Energy Center Number: " + str(cube.energyCenterInfo.energyCenterNumber))
+        print("Value: " + str(cube.energyCenterInfo.value))
 
-print("Static light value: " + str(float(cube.staticLightFP)))
+    print("Static light value: " + str(float(cube.staticLightFP)))
 
-print("Walls:")
-for wall in cube.wallInfoList:
-    print("Id: " + str(wall.wallId) + ", Side: " + str(CubeSide(wall.cubeSide)))
+    print("Walls:")
+    for wall in cube.wallInfoList:
+        print("Id: " + str(wall.wallId) + ", Side: " + str(CubeSide(wall.cubeSide)))
+
+    print("Textures:")
+    for texture in cube.textureInfoList:
+        print("=== Textures for side: " + str(texture.cubeSide) + " ===")
+        print("Primary Texture: " + str(texture.primaryTextureId))
+        print("Secondary Texture: " + str(texture.secondaryTextureId))

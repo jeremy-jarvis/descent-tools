@@ -24,8 +24,14 @@ class WallInfo:
         self.wallId = wallId
         self.cubeSide = cubeSide
 
+class TextureInfo:
+    def __init__(self, primaryTextureId, secondaryTextureId, cubeSide):
+        self.primaryTextureId = primaryTextureId
+        self.secondaryTextureId = secondaryTextureId
+        self.cubeSide = cubeSide
+
 class Cube:
-    def __init__(self, id, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP, wallInfoList):
+    def __init__(self, id, neighborCubes, isEnergyCenter, vertexIndices, energyCenterInfo, staticLightFP, wallInfoList, textureInfoList):
         self.id = id
         self.neighborCubes = neighborCubes
         self.isEnergyCenter = isEnergyCenter
@@ -33,5 +39,6 @@ class Cube:
         self.energyCenterInfo = energyCenterInfo
         self.staticLightFP = staticLightFP
         self.wallInfoList = wallInfoList
+        self.textureInfoList = textureInfoList
 
 
