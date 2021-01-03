@@ -8,6 +8,16 @@ class CubeSide(Enum):
     BACK = 4
     FRONT = 5
 
+class VertexPosition(Enum):
+    LEFT_FRONT_TOP = 0
+    LEFT_FRONT_BOTTOM = 1
+    RIGHT_FRONT_BOTTOM = 2
+    RIGHT_FRONT_TOP = 3
+    LEFT_BACK_TOP = 4
+    LEFT_BACK_BOTTOM = 5
+    RIGHT_BACK_BOTTOM = 6
+    RIGHT_BACK_TOP = 7
+
 class NeighborCubeInfo:
     def __init__(self, attachedCubeId, cubeSide):
         self._attachedCubeId = attachedCubeId

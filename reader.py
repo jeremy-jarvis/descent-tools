@@ -4,7 +4,7 @@ import binascii
 from bitstring import BitArray
 from fixedpoint import FixedPoint
 
-from cube import NeighborCubeInfo, Cube, CubeSide, EnergyCenterInfo, WallInfo, TextureInfo
+from cube import NeighborCubeInfo, Cube, CubeSide, EnergyCenterInfo, WallInfo, TextureInfo, VertexPosition
 
 def convert_coord_bytes_to_decimal(coordBytes):
     # Print Info about bytes
@@ -40,11 +40,16 @@ def convert_coord_bytes_to_decimal(coordBytes):
 ############ Beginning of script ###############
 
 numberOfArguments = len(sys.argv)
-if(numberOfArguments != 2):
+if(numberOfArguments < 2):
     print("Error: No level file name (*.rdl) provided.")
     sys.exit()
 
 levelFileName = str(sys.argv[1])
+
+if(numberOfArguments == 3):
+    outputFileName = str(sys.argv[2])
+else:
+    outputFileName = None
 
 with open(levelFileName, "rb") as level_file:
     dataBytes = level_file.read()
@@ -308,6 +313,48 @@ for cube in cubes:
         print("=== Textures for side: " + str(texture.cubeSide) + " ===")
         print("Primary Texture: " + str(texture.primaryTextureId))
         print("Secondary Texture: " + str(texture.secondaryTextureId))
+
+# Output obj file
+obj = ""
+for vertex in vertexCoords:
+    obj += "v " + str(float(vertex[0])) + " " + str(float(vertex[1])) + " " + str(float(vertex[2])) + "\n"
+for cube in cubes:
+    vertexIndices = cube.vertexIndices
+    front_1 = [vertexIndices[VertexPosition.LEFT_FRONT_TOP.value]+1, vertexIndices[VertexPosition.LEFT_FRONT_BOTTOM.value]+1, vertexIndices[VertexPosition.RIGHT_FRONT_BOTTOM.value]+1]
+    front_2 = [vertexIndices[VertexPosition.RIGHT_FRONT_BOTTOM.value]+1, vertexIndices[VertexPosition.RIGHT_FRONT_TOP.value]+1, vertexIndices[VertexPosition.LEFT_FRONT_TOP.value]+1]
+    back_1 = [vertexIndices[VertexPosition.RIGHT_BACK_BOTTOM.value]+1, vertexIndices[VertexPosition.LEFT_BACK_BOTTOM.value]+1, vertexIndices[VertexPosition.LEFT_BACK_TOP.value]+1]
+    back_2 = [vertexIndices[VertexPosition.LEFT_BACK_TOP.value]+1, vertexIndices[VertexPosition.RIGHT_BACK_TOP.value]+1, vertexIndices[VertexPosition.RIGHT_BACK_BOTTOM.value]+1]
+    top_1 = [vertexIndices[VertexPosition.LEFT_BACK_TOP.value]+1, vertexIndices[VertexPosition.LEFT_FRONT_TOP.value]+1, vertexIndices[VertexPosition.RIGHT_FRONT_TOP.value]+1]
+    top_2 = [vertexIndices[VertexPosition.RIGHT_FRONT_TOP.value]+1, vertexIndices[VertexPosition.RIGHT_BACK_TOP.value]+1, vertexIndices[VertexPosition.LEFT_BACK_TOP.value]+1]
+    bottom_1 = [vertexIndices[VertexPosition.LEFT_FRONT_BOTTOM.value]+1, vertexIndices[VertexPosition.LEFT_BACK_BOTTOM.value]+1, vertexIndices[VertexPosition.RIGHT_BACK_BOTTOM.value]+1]
+    bottom_2 = [vertexIndices[VertexPosition.RIGHT_BACK_BOTTOM.value]+1, vertexIndices[VertexPosition.RIGHT_FRONT_BOTTOM.value]+1, vertexIndices[VertexPosition.LEFT_FRONT_BOTTOM.value]+1]
+    right_1 = [vertexIndices[VertexPosition.RIGHT_FRONT_BOTTOM.value]+1, vertexIndices[VertexPosition.RIGHT_BACK_BOTTOM.value]+1, vertexIndices[VertexPosition.RIGHT_BACK_TOP.value]+1]
+    right_2 = [vertexIndices[VertexPosition.RIGHT_BACK_TOP.value]+1, vertexIndices[VertexPosition.RIGHT_FRONT_TOP.value]+1, vertexIndices[VertexPosition.RIGHT_FRONT_BOTTOM.value]+1]
+    left_1 = [vertexIndices[VertexPosition.LEFT_FRONT_BOTTOM.value]+1, vertexIndices[VertexPosition.LEFT_FRONT_TOP.value]+1, vertexIndices[VertexPosition.LEFT_BACK_TOP.value]+1]
+    left_2 = [vertexIndices[VertexPosition.LEFT_BACK_TOP.value]+1, vertexIndices[VertexPosition.LEFT_BACK_BOTTOM.value]+1, vertexIndices[VertexPosition.LEFT_FRONT_BOTTOM.value]+1]
+    
+    obj += "f " + str(front_1[0]) + " " + str(front_1[1]) + " " + str(front_1[2]) + "\n"
+    obj += "f " + str(front_2[0]) + " " + str(front_2[1]) + " " + str(front_2[2]) + "\n"
+    obj += "f " + str(back_1[0]) + " " + str(back_1[1]) + " " + str(back_1[2]) + "\n"
+    obj += "f " + str(back_2[0]) + " " + str(back_2[1]) + " " + str(back_2[2]) + "\n"
+    obj += "f " + str(top_1[0]) + " " + str(top_1[1]) + " " + str(top_1[2]) + "\n"
+    obj += "f " + str(top_2[0]) + " " + str(top_2[1]) + " " + str(top_2[2]) + "\n"
+    obj += "f " + str(bottom_1[0]) + " " + str(bottom_1[1]) + " " + str(bottom_1[2]) + "\n"
+    obj += "f " + str(bottom_2[0]) + " " + str(bottom_2[1]) + " " + str(bottom_2[2]) + "\n"
+    obj += "f " + str(right_1[0]) + " " + str(right_1[1]) + " " + str(right_1[2]) + "\n"
+    obj += "f " + str(right_2[0]) + " " + str(right_2[1]) + " " + str(right_2[2]) + "\n"
+    obj += "f " + str(left_1[0]) + " " + str(left_1[1]) + " " + str(left_1[2]) + "\n"
+    obj += "f " + str(left_2[0]) + " " + str(left_2[1]) + " " + str(left_2[2]) + "\n"
+    
+obj += "\n"
+
+print("OBJ:")
+print(obj)
+
+if(outputFileName != None):
+    f = open(outputFileName, "w")
+    f.write(obj)
+    f.close()
 
 # Print file header info again (so that it is at the bottom of output)
 print("\n")
