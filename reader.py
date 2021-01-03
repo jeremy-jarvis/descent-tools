@@ -147,9 +147,11 @@ cubeId = 0 # Does this start at zero or one?
 for cubeIndex in list(range(cubeCount)):
     # Get CubeNeighborBitmask
     cubeNeighborBitmaskBytes = data.read(1)
+    print("cubeNeighborBitmaskBytes: " + str(cubeNeighborBitmaskBytes.hex()))
     # cubeNeighborBitmaskByteArray = bytearray(cubeNeighborBitmaskBytes)
     # cubeNeighborBitmaskByteArray.reverse()
     cubeNeighborBitmaskArray = BitArray(hex=cubeNeighborBitmaskBytes.hex())
+    cubeNeighborBitmaskArray.reverse()
     print("Cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
 
     # Count number of attached cubes
@@ -191,10 +193,10 @@ for cubeIndex in list(range(cubeCount)):
     energyCenterInfo = None
 
     if(isEnergyCenter):
-        specialbytes = data.read(1)
-        special = int.from_bytes(specialbytes, "little")
-        energyCenterNumberBytes = data.read(1)
-        energyCenterNumber = int.from_bytes(energyCenterNumberBytes, "little")
+        specialByte = data.read(1)
+        special = int.from_bytes(specialByte, "little")
+        energyCenterNumberByte = data.read(1)
+        energyCenterNumber = int.from_bytes(energyCenterNumberByte, "little")
         valueBytes = data.read(2)
         value = int.from_bytes(valueBytes, "little")
         energyCenterInfo = EnergyCenterInfo(special, energyCenterNumber, value)
@@ -217,15 +219,16 @@ for cubeIndex in list(range(cubeCount)):
     wallsBitmaskBytes = data.read(1)
     wallsBitmaskByteArray = bytearray(wallsBitmaskBytes)
     print("==== wallsBitmaskByteArray hex: 0x" + str(wallsBitmaskByteArray.hex()))
-    # TODO: Something might be wrong with the wall parsing. Ignore walls in order to parse levels without walls.
     wallsBitmaskArray = BitArray(hex=wallsBitmaskBytes.hex())
+    wallsBitmaskArray.reverse()
     print("==== Cube walls bitmask: " + wallsBitmaskArray.bin)
     for index in list(range(numberOfSidesOnACube)):
-        bit = wallsBitmaskArray[index]
-        if(bit == 1):
+        sideHasWall = wallsBitmaskArray[index] == 1
+        if(sideHasWall):
             wallIdBytes = data.read(1)
             wallId = int.from_bytes(wallIdBytes, "little")
-            walls.append(WallInfo(wallId, index))
+            wallInfo = WallInfo(wallId, index)
+            walls.append(wallInfo)
 
     # Parse texture info
     cubeTextures = []
@@ -234,7 +237,6 @@ for cubeIndex in list(range(cubeCount)):
     print("wall bitmask: " + wallsBitmaskArray.bin)
     print("#######################################################################")
     for index in list(range(numberOfSidesOnACube)):
-        # This texture parsing code seems to be correct.
         isDisconnectedSide = cubeNeighborBitmaskArray[index] == 0
         isWallSide = wallsBitmaskArray[index] == 1
         sideHasTexture = isDisconnectedSide or isWallSide
@@ -252,9 +254,9 @@ for cubeIndex in list(range(cubeCount)):
                 secondaryTextureExists = False
             primaryTextureBits = primaryTextureBits[1:16]
             primaryTextureId = primaryTextureBits.int
-            
-            # Get secondary texture id
             print("Primary Texture ID: " + str(primaryTextureId))
+
+            # Get secondary texture id            
             secondaryTextureId = None
             if(secondaryTextureExists):
                 secondaryTextureBytes = data.read(2)
@@ -266,7 +268,8 @@ for cubeIndex in list(range(cubeCount)):
 
             # TODO: Get UVL value(s)
             # For now, just ignore the values
-            data.read(12 * 2)
+            numBytesForUVL = 12 * 2
+            junk = data.read(numBytesForUVL)
     
     print("\n")
 
