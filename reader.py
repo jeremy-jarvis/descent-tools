@@ -101,18 +101,18 @@ for index in list(range(vertexCount)):
     vertexBits = BitArray(hex=vertex.hex())
     print("vertexBits: " + vertexBits.bin)
 
-    xBytesOriginal = vertex[0:4]
-    xBits = BitArray(hex=xBytesOriginal.hex())
-    print("Original X Bits: " + xBits.bin)
-    print("Original X Bits in Byte form: " + str(xBits.bytes))
-    yBytesOriginal = vertex[4:8]
-    yBits = BitArray(hex=yBytesOriginal.hex())
-    print("Original Y Bits: " + yBits.bin)
-    print("Original Y Bits in Byte form: " + str(yBits.bytes))
-    zBytesOriginal = vertex[8:12]
-    zBits = BitArray(hex=zBytesOriginal.hex())
-    print("Original Z Bits: " + zBits.bin)
-    print("Original Z Bits in Byte form: " + str(zBits.bytes))
+    # xBytesOriginal = vertex[0:4]
+    # xBits = BitArray(hex=xBytesOriginal.hex())
+    # print("Original X Bits: " + xBits.bin)
+    # print("Original X Bits in Byte form: " + str(xBits.bytes))
+    # yBytesOriginal = vertex[4:8]
+    # yBits = BitArray(hex=yBytesOriginal.hex())
+    # print("Original Y Bits: " + yBits.bin)
+    # print("Original Y Bits in Byte form: " + str(yBits.bytes))
+    # zBytesOriginal = vertex[8:12]
+    # zBits = BitArray(hex=zBytesOriginal.hex())
+    # print("Original Z Bits: " + zBits.bin)
+    # print("Original Z Bits in Byte form: " + str(zBits.bytes))
 
     xBytes = vertex[0:4]
     yBytes = vertex[4:8]
@@ -148,8 +148,6 @@ for cubeIndex in list(range(cubeCount)):
     # Get CubeNeighborBitmask
     cubeNeighborBitmaskBytes = data.read(1)
     print("cubeNeighborBitmaskBytes: " + str(cubeNeighborBitmaskBytes.hex()))
-    # cubeNeighborBitmaskByteArray = bytearray(cubeNeighborBitmaskBytes)
-    # cubeNeighborBitmaskByteArray.reverse()
     cubeNeighborBitmaskArray = BitArray(hex=cubeNeighborBitmaskBytes.hex())
     cubeNeighborBitmaskArray.reverse()
     print("Cube neighbor bitmask: " + cubeNeighborBitmaskArray.bin)
