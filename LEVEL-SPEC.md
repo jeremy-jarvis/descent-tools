@@ -41,7 +41,7 @@ This data starts immediately after the header (always true?) which will correspo
   * 2 byte integer
   * The number of cubes in the level.
 
-The geometry of a Descent 1 level is made up of cubes, each of which has 8 vertices (corners). Each vertex is specified by its x, y, z coordinates in the level. If you can imagine level made up of only a single cube at the center of the level, it could be defined by 8 vertices as follows:
+The geometry of a Descent 1 level is made up of cubes, each of which has 8 vertices (corners). Each vertex is specified by its x, y, z coordinates in the level. If you can imagine level made up of only a single cube at the center of the level, that cube could be defined by 8 vertices as follows:
 <pre>
  10.0  10.0 -10.0
  10.0 -10.0 -10.0
@@ -55,5 +55,24 @@ The geometry of a Descent 1 level is made up of cubes, each of which has 8 verti
 
 In this case, the center of the cube is at the very origin (center) of the level, and each side of the cube is 20 units long. Each vertex defines one of the 8 corners of the cube.
 
-#### NEXT: Descibe how vertices are shared among cubes, with a two-cube example.
+Now, imagine a level made up of two cubes. The two cubes are connected by one side to make a very short hallway. Those two cubes could be defined by 12 vertices as follows: 
+
+<pre>
+ 10.0  10.0 -20.0
+ 10.0 -10.0 -20.0
+-10.0 -10.0 -20.0
+-10.0  10.0 -20.0
+ 10.0  10.0  0.0
+ 10.0 -10.0  0.0
+-10.0 -10.0  0.0
+-10.0  10.0  0.0
+ 10.0  10.0  20.0
+ 10.0 -10.0  20.0
+-10.0 -10.0  20.0
+-10.0  10.0  20.0
+</pre>
+
+In this case, the vertices with a z-value of 0.0 are those that are located in the very middle of the level. You might wonder why there are only 12 vertices instead of 16 (8 for each cube). There are 12 because the two cubes share four of the vertices where they are attached to each other. Each cube has four vertices all to its own, on the ends of the hallway, and each cube has four vertices that are shared with the other cube.
+
+
 
