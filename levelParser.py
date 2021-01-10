@@ -93,7 +93,7 @@ cubeCountBytes = data.read(2)
 cubeCount = int.from_bytes(cubeCountBytes, "little")
 print("Cube count: " + str(cubeCount))
 
-verticesBytes = data.read(vertexCount * 12) # 12 byes per vertex
+verticesBytes = data.read(vertexCount * 12) # 12 bytes per vertex
 vertices = io.BytesIO(verticesBytes)
 vertexCoords = []
 cubes = []
