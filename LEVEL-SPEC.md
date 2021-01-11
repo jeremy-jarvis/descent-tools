@@ -51,7 +51,7 @@ This data starts immediately after the header (always true?) which will correspo
 
   The data for each cube is of variable length depending on the cube's properties. So, one cannot simply multiply the cube count by a known size to determine the total amount of data that represents the cubes. If you want to calculate the number of bytes of cube data, you should be able to do so as follows: `number of bytes of cubes data = objects offset - current byte location in RDL data`
 
-  The data for each cube is provided one after the other within the RDL file, until all the cubes have been specified. The following provides a brief specification for a single cube.A more in-depth walkthrough of the cube data is provided later in this specification.
+  The data for the cubes are provided one after the other within the RDL file, until all the cubes have been specified. The following provides a brief specification for a single cube. A more in-depth walkthrough of the cube data is provided later in this specification.
 
   * Cube Neighbor Bitmask
     * 1 byte
@@ -66,10 +66,34 @@ This data starts immediately after the header (always true?) which will correspo
     * Bit 7 is not used.
 
   * Cube Neighbor IDs
-    * 2 byte integer (per cube neighbor, if any)
-    * For each cube neighbor specified by the Cube Neighbor Bitmask, a 2-byte integer will follow the bitmask that represents the ID of the neighbor cube. The ID specifies the index of the neighbor cube within the cubes data. A cube can have multiple neighbors, which would mean that multiple cube IDs will follow the bitmask.
+    * 2 byte integer (per cube neighbor)
+    * For each cube neighbor specified by the Cube Neighbor Bitmask, a 2-byte integer will follow the bitmask - each representing the ID of the neighbor cube. The ID specifies the index of the neighbor cube within the cubes data. A cube can have multiple neighbors, which would mean that multiple 2-byte cube IDs will follow the bitmask.
 
-  * Vertex References
+  * Vertex IDs
+    * 16 bytes = 2 bytes * 8 vertices
+    * Each vertex ID is a 2 byte integer that references which vertex belongs to which corner of the cube. Each vertex ID specifies the index of the vertex within the collection of vertices found earlier in the file. For example, if the vertex ID is 0, then it is the first vertex in the list. If the vertex ID is 5, then it is the 6th vertex.
+    * The order of the Vertex IDs indicates which corner of the cube it belongs to:
+      * 0 = Left, Front, Top
+      * 1 = Left, Front, Bottom
+      * 2 = Right, Front, Bottom
+      * 3 = Right, Front, Top
+      * 4 = Left, Back, Top
+      * 5 = Left, Back, Bottom
+      * 6 = Right, Back, Bottom
+      * 7 = Right, Back, Top
+
+  * Energy Center Information
+
+    Note: This is only present when cube is an energy center, per bitmask bit 6
+    * 1 byte integer: special (TODO: Determine what this is for)
+    * 1 byte integer: energy center number
+    * 2 byte integer: value
+
+  * Static Light Value
+    * 2 bytes
+    * The Static Light value should be interpreted as a 16-bit fixed-point number in 4.12 format. That means that 4 bits represent the integer portion of the number, and 12 bits represent the fractional portion of the number.
+
+  * Walls
     * TODO
 
 
