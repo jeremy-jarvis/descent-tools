@@ -134,6 +134,11 @@ This data starts immediately after the header (TODO: Is this always true?) which
       * 24 bytes
       * TODO: Describe the meaning of the UVL data.
 
+### Objects
+Following the mine structure data is the object data. Objects include the player(s), enemies, power-ups, etc that populate the level.
+
+* TODO: Add specification for the object data.
+
 ## Detailed Explanation of Cubes and Vertices
 
 The geometry of a Descent 1 level is made up of cubes, each of which has 8 vertices (corners). Each vertex is specified by its x, y, z coordinates in the level. If you can imagine level made up of only a single cube at the center of the level, that cube could be defined by 8 vertices as follows:
