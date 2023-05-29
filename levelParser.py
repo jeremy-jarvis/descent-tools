@@ -103,25 +103,15 @@ for index in list(range(vertexCount)):
     vertexBytes = vertices.read(12)
     vertex = bytearray(vertexBytes)
     print("Length of vertex bytearray: " + str(len(vertex)))
+    print("Contents of vertex bytearray: " + vertex.hex())
     vertexBits = BitArray(hex=vertex.hex())
     print("vertexBits: " + vertexBits.bin)
 
-    # xBytesOriginal = vertex[0:4]
-    # xBits = BitArray(hex=xBytesOriginal.hex())
-    # print("Original X Bits: " + xBits.bin)
-    # print("Original X Bits in Byte form: " + str(xBits.bytes))
-    # yBytesOriginal = vertex[4:8]
-    # yBits = BitArray(hex=yBytesOriginal.hex())
-    # print("Original Y Bits: " + yBits.bin)
-    # print("Original Y Bits in Byte form: " + str(yBits.bytes))
-    # zBytesOriginal = vertex[8:12]
-    # zBits = BitArray(hex=zBytesOriginal.hex())
-    # print("Original Z Bits: " + zBits.bin)
-    # print("Original Z Bits in Byte form: " + str(zBits.bytes))
-
-    xBytes = vertex[0:4]
+    # The vertex bytes seem to be in Z, Y, X order. Interpreting the vertex data in that order allows the resulting OBJ file 
+    # to look correct when it is loaded into Blender. Further analysis may be needed to ensure that this interpretation is correct.
+    zBytes = vertex[0:4]
     yBytes = vertex[4:8]
-    zBytes = vertex[8:12]
+    xBytes = vertex[8:12]
 
     print("\n")
     print("=========== Calculating X ============")
@@ -132,7 +122,7 @@ for index in list(range(vertexCount)):
     print("\n")
     print("=========== Calculating Z ============")
     z = convert_coord_bytes_to_decimal(zBytes)
-
+    
     print("\n")
     print("======== Coordinate: " + str(float(x)) + ", " + str(float(y)) + ", " + str(float(z)))
     print("\n")
