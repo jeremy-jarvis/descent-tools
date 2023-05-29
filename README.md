@@ -9,10 +9,16 @@ The parser is built to work with the full version of Descent. The shareware vers
 ### File Spec
 For a specification of the descent level format (RDL), see the [level spec](./LEVEL-SPEC.md). 
 
+### Dependencies
+
+Before using the tools, you must first install Python3 and the following Python dependencies: `bitstring` and `fixedpoint`.
+
+You can install both dependencies using `pip3 install -r requirements.txt`
+
 ## Tools
 
 ### LevelParser
 
-Reads in Descent 1 level (RDL) files, and output OBJ representation of the level geometry (cubes and vertices). The OBJ file can be imported as a 3D model into a tool like Blender.
+This tool reads in Descent 1 level (RDL) files, and output OBJ representation of the level geometry (cubes and vertices). The OBJ file can be imported as a 3D model into a tool like Blender.
 
 Usage: `python3 levelParser.py <rdl-input-file> <obj-output-file>`

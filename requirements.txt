@@ -1,0 +1,2 @@
+bitstring==4.0.2
+fixedpoint==1.0.1

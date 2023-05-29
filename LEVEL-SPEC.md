@@ -3,7 +3,7 @@
 ## Introduction
 Each Descent level is stored in a separate binary file with an *.rdl file extension. RDL stands for "Registered Descent Level". Multiple RDL files can be stored within a single HOG file as a unified level set, also known as a "mission". Alternatively, a single RDL file can stand alone and be played without being packaged in a HOG file. Either way, an RDL or HOG file must be paired with a MSN metadata file to enable it to be loaded by Descent and played.
 
-An RDL file contains binary data in a specific order. The length of the file and the presense of specific binary elements is determined by how many cubes (TODO: and objects?) are in the level, and the properties of each cube.
+An RDL file contains binary data in a specific order. The length of the file and the presence of specific binary elements are determined by how many cubes (TODO: and objects?) are in the level, and the properties of each cube.
 
 The following is a specification of the RDL file format from beginning to end.
 
