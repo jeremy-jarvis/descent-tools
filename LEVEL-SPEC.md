@@ -1,13 +1,15 @@
 # Descent 1 Level Specification (RDL)
 
 ## Introduction
+The purpose of this documentation is to be a comprehensive and clear specification of the RDL file format from beginning to end. It currently contains a few gaps in specification (e.g. Objects) due to the Level Parser not yet being able to parse those elements. Those gaps are marked with TODOs.
+
+This spec and the Level Parser are based mainly upon the RDL spec [posted here](https://web.archive.org/web/20180801215219/http://www.descent2.com/ddn/specs/rdl/) on the Internet Archive, as well as knowledge gleaned from examining other parsers. 
+
 Each Descent level is stored in a separate binary file with an *.rdl file extension. RDL stands for "Registered Descent Level". Multiple RDL files can be stored within a single HOG file as a unified level set, also known as a "mission". Alternatively, a single RDL file can stand alone and be played without being packaged in a HOG file. Either way, an RDL or HOG file must be paired with a MSN metadata file to enable it to be loaded by Descent and played.
 
-An RDL file contains binary data in a specific order. The length of the file and the presence of specific binary elements are determined by how many cubes (TODO: and objects?) are in the level, and the properties of each cube.
+An RDL file contains binary data in a specific order. The length of the file and the presence of specific binary elements are determined by how many cubes (and objects?) are in the level, and the properties of each cube. The following describes the file data from beginning to end.
 
-The following is a specification of the RDL file format from beginning to end.
-
-## The Spec
+## The RDL File Spec
 ### Header
 Every Descent level begins with a header containing the following elements:
 * Signature
